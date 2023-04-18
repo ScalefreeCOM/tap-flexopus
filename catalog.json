@@ -1,0 +1,112 @@
+{
+  "streams": [
+    {
+      "tap_stream_id": "buildings",
+      "key_properties": [],
+      "schema": {
+        "properties": {
+          "data": {
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "items": {
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "type": [
+          "null",
+          "object"
+        ],
+        "additionalProperties": false
+      },
+      "stream": "buildings",
+      "metadata": [
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "selected": "true"
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "bookings",
+      "key_properties": [],
+      "schema": {
+        "properties": {
+          "data": {
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "items": {
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "type": [
+          "null",
+          "object"
+        ],
+        "additionalProperties": false
+      },
+      "stream": "bookings",
+      "metadata": [
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "selected": "true"
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id": "bookables",
+      "key_properties": [],
+      "schema": {
+        "properties": {
+          "data": {
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            },
+            "items": {
+              "type": "object"
+            },
+            "type": [
+              "null",
+              "array"
+            ]
+          }
+        },
+        "type": [
+          "null",
+          "object"
+        ],
+        "additionalProperties": false
+      },
+      "stream": "bookables",
+      "metadata": [
+        {
+          "breadcrumb": [],
+          "metadata": {
+            "selected": "true"
+          }
+        }
+      ]
+    }
+  ]
+}
