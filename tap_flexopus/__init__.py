@@ -9,7 +9,7 @@ from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 from datetime import datetime, timedelta
 
-REQUIRED_CONFIG_KEYS = ["base_url", "api_key",  "start_date"]
+REQUIRED_CONFIG_KEYS = ["base_url", "api_key"]
 LOGGER = singer.get_logger()
 
 
@@ -60,9 +60,11 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         response = session.request("GET", api_endpoint, headers=header)
     else:
         yesterday = datetime.now() - timedelta(days=1)
+        nextWeek  = datetime.now() + timedelta(days=6)
         params = {
         'from': str(yesterday.date())+'T'+str(yesterday.time())+'Z',
-        'to': str(datetime.now().date())+'T'+str(datetime.now().time())+'Z',
+        'to': str(nextWeek.date())+'T'+str(nextWeek.time())+'Z',
+        #'to': str(datetime.now().date())+'T'+str(datetime.now().time())+'Z',
         }    
         FindLocationIds = False
         response = session.request("GET", api_endpoint, headers=header, params=params)
