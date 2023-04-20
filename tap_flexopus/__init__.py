@@ -157,9 +157,12 @@ def main():
             catalog = args.catalog
         else:
             catalog = discover()
-        ## swap the streams so the last stream becomes the primary one
-        catalog.streams[0],catalog.streams[2] = catalog.streams[2],catalog.streams[0]
-        #catalog.streams[1],catalog.streams[2] = catalog.streams[2],catalog.streams[1]
+            
+        ## swap the streams so the building stream becomes the primary one
+        for i in range(len(catalog.streams)):
+            if catalog.streams[i].stream == 'buildings':
+                catalog.streams[0],catalog.streams[i] = catalog.streams[i], catalog.streams[0]
+                
         sync(args.config, args.state, catalog)
 
 
