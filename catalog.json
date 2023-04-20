@@ -1,7 +1,7 @@
 {
   "streams": [
     {
-      "tap_stream_id": "buildings",
+      "tap_stream_id": "bookables",
       "key_properties": [],
       "schema": {
         "properties": {
@@ -26,7 +26,7 @@
         ],
         "additionalProperties": false
       },
-      "stream": "buildings",
+      "stream": "bookables",
       "metadata": [
         {
           "breadcrumb": [],
@@ -34,7 +34,7 @@
             "selected": "true"
           }
         }
-      ]
+	  ]
     },
     {
       "tap_stream_id": "bookings",
@@ -70,10 +70,10 @@
             "selected": "true"
           }
         }
-      ]
+	  ]
     },
     {
-      "tap_stream_id": "bookables",
+      "tap_stream_id": "buildings",
       "key_properties": [],
       "schema": {
         "properties": {
@@ -98,7 +98,7 @@
         ],
         "additionalProperties": false
       },
-      "stream": "bookables",
+      "stream": "buildings",
       "metadata": [
         {
           "breadcrumb": [],
@@ -106,7 +106,7 @@
             "selected": "true"
           }
         }
-      ]
+	  ]
     }
   ]
 }

@@ -60,7 +60,7 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         response = session.request("GET", api_endpoint, headers=header)
     else:
         yesterday = datetime.now() - timedelta(days=1)
-        nextWeek  = datetime.now() + timedelta(days=6)
+        nextWeek  = datetime.now() + timedelta(days=5)
         params = {
         'from': str(yesterday.date())+'T'+str(yesterday.time())+'Z',
         'to': str(nextWeek.date())+'T'+str(nextWeek.time())+'Z',
@@ -71,7 +71,6 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     
     #LOGGER.info(response.text)
     tap_data = response.json()
-    
     for row in tap_data['data']:
         if FindLocationIds:
             LocationIds.append(row['id'])
@@ -125,20 +124,18 @@ def sync(config, state, catalog):
 
         if locationIds == None:
             api_endpoint = base_url + endPoints[stream.tap_stream_id]
-            try:
-                locationIds, max_bookmark  = requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoints[stream.tap_stream_id], max_bookmark)
-            except:
-                LOGGER.error("Failed to extract data from: " + api_endpoint)
+
+            locationIds, max_bookmark  = requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoints[stream.tap_stream_id], max_bookmark)
+
         
         else:
             for locationId in locationIds:
                 temp = endPoints[stream.tap_stream_id]
                 endPoint     = temp.replace("{location_id}", str(locationId))
                 api_endpoint = base_url + endPoint
-                try:
-                    _, max_bookmark = requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark)
-                except:
-                    LOGGER.error("Failed to extract data from: " + api_endpoint)
+
+                _, max_bookmark = requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark)
+
     return
 
 
@@ -146,8 +143,10 @@ def sync(config, state, catalog):
 def main():
     
     # Parse command line arguments
+
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
 
+        
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:
         catalog = discover()
@@ -158,6 +157,9 @@ def main():
             catalog = args.catalog
         else:
             catalog = discover()
+        ## swap the streams so the last stream becomes the primary one
+        catalog.streams[0],catalog.streams[2] = catalog.streams[2],catalog.streams[0]
+        #catalog.streams[1],catalog.streams[2] = catalog.streams[2],catalog.streams[1]
         sync(args.config, args.state, catalog)
 
 
