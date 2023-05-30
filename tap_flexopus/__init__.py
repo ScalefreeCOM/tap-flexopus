@@ -95,7 +95,6 @@ def sync(config, state, catalog):
     locationIds  = None
     for stream in catalog.get_selected_streams(state):
         time.sleep(0.2)
-        print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
         LOGGER.info("Syncing stream:" + stream.tap_stream_id)
 
         bookmark_column = stream.replication_key
