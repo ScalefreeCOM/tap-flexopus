@@ -56,7 +56,10 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     LocationIds     = []
     if endPoint == '/buildings':
         FindLocationIds = True
-        response = session.request("GET", api_endpoint, headers=header)
+        try:
+            response = session.request("GET", api_endpoint, headers=header)
+        except Exception as e:
+            LOGGER.error("field to get data from the end point: " + api_endpoint)
     else:
         yesterday = datetime.now() - timedelta(days=1)
         nextWeek  = datetime.now() + timedelta(days=5)
@@ -66,8 +69,10 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         #'to': str(datetime.now().date())+'T'+str(datetime.now().time())+'Z',
         }    
         FindLocationIds = False
-        response = session.request("GET", api_endpoint, headers=header, params=params)
-    
+        try:
+            response = session.request("GET", api_endpoint, headers=header, params=params)
+        except Exception as e:
+            LOGGER.error("field to get data from the end point: " + api_endpoint)
     #LOGGER.info(response.text)
     tap_data = response.json()
 	
