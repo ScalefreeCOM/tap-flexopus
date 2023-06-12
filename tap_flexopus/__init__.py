@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 REQUIRED_CONFIG_KEYS = ["base_url", "api_key"]
 LOGGER = singer.get_logger()
 
-
 def get_abs_path(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
 
@@ -71,6 +70,7 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     
     #LOGGER.info(response.text)
     tap_data = response.json()
+	
     for row in tap_data['data']:
         if FindLocationIds:
             LocationIds.append(row['id'])
@@ -94,18 +94,18 @@ def sync(config, state, catalog):
     locationIds  = None
     for stream in catalog.get_selected_streams(state):
         time.sleep(0.2)
-        print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
         LOGGER.info("Syncing stream:" + stream.tap_stream_id)
 
         bookmark_column = stream.replication_key
         is_sorted = True  # TODO: indicate whether data is sorted ascending on bookmark value
-
-        singer.write_schema(
-            stream_name=stream.tap_stream_id,
-            schema=stream.schema.to_dict(),
-            key_properties=stream.key_properties,
-        )
-
+        try:
+            singer.write_schema(
+                stream_name=stream.tap_stream_id,
+                schema=stream.schema.to_dict(),
+                key_properties=stream.key_properties,
+            )
+        except Exception as e:
+            LOGGER.error("Fieled to write schema"+ e.message + e.args)
         # TODO: delete and replace this inline function with your own data retrieval process:
         # tap_data = lambda: [{"id": x, "name": "row${x}"} for x in range(1000)]
         base_url = config.get('base_url')
@@ -127,6 +127,7 @@ def sync(config, state, catalog):
 
             locationIds, max_bookmark  = requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoints[stream.tap_stream_id], max_bookmark)
 
+																			
         
         else:
             for locationId in locationIds:
@@ -136,6 +137,7 @@ def sync(config, state, catalog):
 
                 _, max_bookmark = requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark)
 
+																				
     return
 
 
@@ -162,9 +164,11 @@ def main():
         for i in range(len(catalog.streams)):
             if catalog.streams[i].stream == 'buildings':
                 catalog.streams[0],catalog.streams[i] = catalog.streams[i], catalog.streams[0]
-                
-        sync(args.config, args.state, catalog)
-
+        try:        
+            sync(args.config, args.state, catalog)
+            
+        except Exception as e:
+            LOGGER.error("Fieled to sync the stream"+ e.message + e.args)
 
 if __name__ == "__main__":
     main()
