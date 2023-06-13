@@ -152,7 +152,6 @@ def main():
     # Parse command line arguments
 
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
-
         
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:
