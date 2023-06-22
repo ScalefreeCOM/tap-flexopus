@@ -59,7 +59,9 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         try:
             response = session.request("GET", api_endpoint, headers=header)
         except Exception as e:
-            LOGGER.error("field to get data from the end point: " + api_endpoint)
+            LOGGER.error("field to get data from the end point: /buildings")
+            LOGGER.error(e)
+
     else:
         yesterday = datetime.now() - timedelta(days=1)
         nextWeek  = datetime.now() + timedelta(days=5)
@@ -73,6 +75,7 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
             response = session.request("GET", api_endpoint, headers=header, params=params)
         except Exception as e:
             LOGGER.error("field to get data from the end point: " + api_endpoint)
+            LOGGER.error(e)
     #LOGGER.info(response.text)
     tap_data = response.json()
 	
@@ -110,7 +113,8 @@ def sync(config, state, catalog):
                 key_properties=stream.key_properties,
             )
         except Exception as e:
-            LOGGER.error("Fieled to write schema"+ e.message + e.args)
+            LOGGER.error("Fieled to write schema:")
+            LOGGER.error(e)
         # TODO: delete and replace this inline function with your own data retrieval process:
         # tap_data = lambda: [{"id": x, "name": "row${x}"} for x in range(1000)]
         base_url = config.get('base_url')
@@ -172,7 +176,8 @@ def main():
             sync(args.config, args.state, catalog)
             
         except Exception as e:
-            LOGGER.error("Fieled to sync the stream"+ e.message + e.args)
+            LOGGER.error("Fieled to sync the stream:")
+            LOGGER.error(e)
 
 if __name__ == "__main__":
     main()
