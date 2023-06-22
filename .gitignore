@@ -104,3 +104,10 @@ state.json
 config.json
 tap_flexopus.egg-info
 .vscode
+catalog_gen.json
+catalog_new.json
+catalog_ref copy.json
+tap_flexopus/catalog.json
+tap_flexopus/test.py
+tap_flexopus/working catalog.json
+.gitignore
