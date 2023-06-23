@@ -7,9 +7,9 @@ import time
 from singer import utils, metadata
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
-REQUIRED_CONFIG_KEYS = ["base_url", "api_key"]
+REQUIRED_CONFIG_KEYS = ["base_url", "api_key", "start_date"]
 LOGGER = singer.get_logger()
 
 def get_abs_path(path):
@@ -52,7 +52,25 @@ def discover():
         )
     return Catalog(streams)
 
-def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark):
+def getNumberOfWeeks(Date):
+    startDate = date(int(Date[0:4]),int(Date[5:7]),int(Date[8:10]))
+    Today     = datetime.now().date()
+    days      = abs(Today - startDate).days
+    numberOfWeeks =  days//7
+        
+    return numberOfWeeks
+    
+def getStartAndEndDates(weekNumber):
+    startDate = datetime.now() - timedelta(weeks=weekNumber)
+    endDate  = startDate + timedelta(weeks=1)
+    startAndEndDate = {
+    'from': str(startDate.date())+'T'+str(startDate.time())+'Z',
+    'to': str(endDate.date())+'T'+str(endDate.time())+'Z',
+    }       
+
+    return startAndEndDate
+
+def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark, startAndEndDate = None):
     LocationIds     = []
     if endPoint == '/buildings':
         FindLocationIds = True
@@ -63,20 +81,14 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
             LOGGER.error(e)
 
     else:
-        yesterday = datetime.now() - timedelta(days=1)
-        nextWeek  = datetime.now() + timedelta(days=5)
-        params = {
-        'from': str(yesterday.date())+'T'+str(yesterday.time())+'Z',
-        'to': str(nextWeek.date())+'T'+str(nextWeek.time())+'Z',
-        #'to': str(datetime.now().date())+'T'+str(datetime.now().time())+'Z',
-        }    
+ 
         FindLocationIds = False
         try:
-            response = session.request("GET", api_endpoint, headers=header, params=params)
+            response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate)
         except Exception as e:
             LOGGER.error("field to get data from the end point: " + api_endpoint)
             LOGGER.error(e)
-    #LOGGER.info(response.text)
+
     tap_data = response.json()
 	
     for row in tap_data['data']:
@@ -96,7 +108,7 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     return LocationIds, max_bookmark  
     
         
-def sync(config, state, catalog):
+def sync(config, state, catalog, numberOfWeeks):
     """ Sync data from tap source """
     # Loop over selected streams in catalog
     locationIds  = None
@@ -115,8 +127,7 @@ def sync(config, state, catalog):
         except Exception as e:
             LOGGER.error("Fieled to write schema:")
             LOGGER.error(e)
-        # TODO: delete and replace this inline function with your own data retrieval process:
-        # tap_data = lambda: [{"id": x, "name": "row${x}"} for x in range(1000)]
+
         base_url = config.get('base_url')
         api_key = config.get('api_key')
         
@@ -140,11 +151,14 @@ def sync(config, state, catalog):
         
         else:
             for locationId in locationIds:
-                temp = endPoints[stream.tap_stream_id]
-                endPoint     = temp.replace("{location_id}", str(locationId))
-                api_endpoint = base_url + endPoint
+                for weekNumber in range(numberOfWeeks):
+                    startAndEndDate = getStartAndEndDates(weekNumber)
+                    temp = endPoints[stream.tap_stream_id]
+                    endPoint     = temp.replace("{location_id}", str(locationId))
+                    api_endpoint = base_url + endPoint
 
-                _, max_bookmark = requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark)
+                    _, max_bookmark = requestAndWriteData(session, api_endpoint, header, stream,
+                                                        bookmark_column, is_sorted, endPoint, max_bookmark,startAndEndDate)
 
 																				
     return
@@ -168,12 +182,16 @@ def main():
         else:
             catalog = discover()
             
-        ## swap the streams so the building stream becomes the primary one
+        try:
+            numberOfWeeks = getNumberOfWeeks(args.config.get('start_date')) + 1
+        except:
+            LOGGER.error("Wrong start date format or value. Acceptable example is: 2023.02.01")
+        
         for i in range(len(catalog.streams)):
             if catalog.streams[i].stream == 'buildings':
                 catalog.streams[0],catalog.streams[i] = catalog.streams[i], catalog.streams[0]
         try:        
-            sync(args.config, args.state, catalog)
+            sync(args.config, args.state, catalog, numberOfWeeks)
             
         except Exception as e:
             LOGGER.error("Fieled to sync the stream:")
