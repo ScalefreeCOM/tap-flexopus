@@ -70,7 +70,7 @@ def getStartAndEndDates(weekNumber):
 
     return startAndEndDate
 
-def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark, locationId, startAndEndDate = None):
+def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark, locationId = None, startAndEndDate = None):
     LocationIds     = []
     if endPoint == '/buildings':
         FindLocationIds = True
