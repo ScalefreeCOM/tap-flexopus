@@ -70,7 +70,7 @@ def getStartAndEndDates(weekNumber):
 
     return startAndEndDate
 
-def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark, startAndEndDate = None):
+def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, is_sorted, endPoint, max_bookmark, locationId, startAndEndDate = None):
     LocationIds     = []
     if endPoint == '/buildings':
         FindLocationIds = True
@@ -85,6 +85,7 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         FindLocationIds = False
         try:
             response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate)
+    
         except Exception as e:
             LOGGER.error("field to get data from the end point: " + api_endpoint)
             LOGGER.error(e)
@@ -94,6 +95,9 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     for row in tap_data['data']:
         if FindLocationIds:
             LocationIds.append(row['id'])
+        elif stream.tap_stream_id == 'bookables':
+            row['location_id'] = locationId
+
         singer.write_records(stream.tap_stream_id, [row])
         if bookmark_column:
             if is_sorted:
@@ -158,7 +162,7 @@ def sync(config, state, catalog, numberOfWeeks):
                     api_endpoint = base_url + endPoint
 
                     _, max_bookmark = requestAndWriteData(session, api_endpoint, header, stream,
-                                                        bookmark_column, is_sorted, endPoint, max_bookmark,startAndEndDate)
+                                                        bookmark_column, is_sorted, endPoint, max_bookmark, locationId, startAndEndDate)
 
 																				
     return
