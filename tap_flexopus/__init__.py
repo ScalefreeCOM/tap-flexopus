@@ -85,7 +85,9 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         FindLocationIds = False
         try:
             response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate)
-    
+            while response.reason == 'Too Many Requests':
+                time.sleep(5)
+                response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate) 
         except Exception as e:
             LOGGER.error("field to get data from the end point: " + api_endpoint)
             LOGGER.error(e)
@@ -95,8 +97,8 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     for row in tap_data['data']:
         if FindLocationIds:
             LocationIds.append(row['id'])
-        elif stream.tap_stream_id == 'bookables':
-            row['location_id'] = locationId
+        elif stream.tap_stream_id == 'bookables' or stream.tap_stream_id == 'bookings':
+            row.update({"location_id": locationId})
 
         singer.write_records(stream.tap_stream_id, [row])
         if bookmark_column:
