@@ -86,7 +86,7 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         try:
             response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate)
             while response.reason == 'Too Many Requests':
-                time.sleep(5)
+                time.sleep(60)
                 response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate) 
         except Exception as e:
             LOGGER.error("field to get data from the end point: " + api_endpoint)
@@ -95,8 +95,14 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     tap_data = response.json()
 	
     for row in tap_data['data']:
+        # if FindLocationIds:
+        #     LocationIds.append(row['locations'][0]['id'])
         if FindLocationIds:
-            LocationIds.append(row['id'])
+            if row.get("locations"):
+                for location in row["locations"]:
+                    LocationIds.append(location["id"])
+            else:
+                LOGGER.warning(f"Building without locations: {row.get('id')}")
         elif stream.tap_stream_id == 'bookables' or stream.tap_stream_id == 'bookings':
             row.update({"location_id": locationId})
 
