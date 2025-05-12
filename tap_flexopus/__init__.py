@@ -4,10 +4,37 @@ import json
 import singer
 import requests
 import time
+import functools
+import collections
 from singer import utils, metadata
 from singer.catalog import Catalog, CatalogEntry
 from singer.schema import Schema
 from datetime import datetime, timedelta, date
+
+def ratelimit(limit, every):
+    def limitdecorator(func):
+        times = collections.deque()
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if len(times) >= limit:
+                tim0 = times.pop()
+                tim = time.time()
+                sleep_time = every - (tim - tim0)
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+
+            times.appendleft(time.time())
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return limitdecorator
+
+
+@ratelimit(58, 60)
+def rate_limited_request(session, method, url, **kwargs):
+    return session.request(method, url, **kwargs)
 
 REQUIRED_CONFIG_KEYS = ["base_url", "api_key", "start_date"]
 LOGGER = singer.get_logger()
@@ -75,20 +102,19 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
     if endPoint == '/buildings':
         FindLocationIds = True
         try:
-            response = session.request("GET", api_endpoint, headers=header)
+            response = rate_limited_request(session, "GET", api_endpoint, headers=header)
         except Exception as e:
             LOGGER.error("field to get data from the end point: /buildings")
             LOGGER.error(e)
     else:
         FindLocationIds = False
         try:
-            # LOGGER.info(f"Sending GET request to: {api_endpoint} with params: {startAndEndDate}")
-            response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate)
-            time.sleep(1.05)
+            LOGGER.info(f"Sending GET request to: {api_endpoint} with params: {startAndEndDate}")
+            response = rate_limited_request(session, "GET", api_endpoint, headers=header, params=startAndEndDate)
             while response.reason == 'Too Many Requests':
-                LOGGER.info("Too many requests waiting 5 seconds")
+                LOGGER.info("Too many requests sleeping for 5s")
                 time.sleep(5)
-                response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate) 
+                response = rate_limited_request(session, "GET", api_endpoint, headers=header, params=startAndEndDate)
         except Exception as e:
             LOGGER.error("field to get data from the end point: " + api_endpoint)
             LOGGER.error(e)
