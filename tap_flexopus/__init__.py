@@ -79,14 +79,15 @@ def requestAndWriteData(session, api_endpoint, header, stream, bookmark_column, 
         except Exception as e:
             LOGGER.error("field to get data from the end point: /buildings")
             LOGGER.error(e)
-
     else:
- 
         FindLocationIds = False
         try:
+            # LOGGER.info(f"Sending GET request to: {api_endpoint} with params: {startAndEndDate}")
             response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate)
+            time.sleep(1.05)
             while response.reason == 'Too Many Requests':
-                time.sleep(60)
+                LOGGER.info("Too many requests waiting 5 seconds")
+                time.sleep(5)
                 response = session.request("GET", api_endpoint, headers=header, params=startAndEndDate) 
         except Exception as e:
             LOGGER.error("field to get data from the end point: " + api_endpoint)
